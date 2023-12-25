@@ -1,0 +1,63 @@
+version: '2.1'
+services:
+  configserver:
+    image: ostock/configserver:0.1.0-vGIT
+    ports:
+       - "8071:8071"
+    environment:
+      ENCRYPT_KEY: IMSYMMETRIC
+    networks:
+      backend:
+        aliases:
+          - "configserver"
+    healthcheck:
+      test: exit 0
+      start_period: 15s
+  eurekaserver:
+    image: ostock/eurekaserver:0.1.6-vDockerComp
+    ports:
+       - "8090:8090"
+    networks:
+      backend:
+        aliases:
+          - "eurekaserver"
+    healthcheck:
+      test: exit 0
+      start_period: 45s
+    depends_on:
+          configserver:
+            condition: service_healthy
+  organizationservice:
+    image: ostock/organization-service:0.1.6-vORG
+    ports:
+       - "8086:8086"
+    environment:
+      ORGANIZATIONSERVICE_PORT: 8086
+    networks:
+      backend:
+        aliases:
+          - "organizationservice"
+    depends_on:
+          configserver:
+            condition: service_healthy
+          eurekaserver:
+            condition: service_healthy
+  licensingnservice:
+    image: ostock/licensing-service:0.1.6-vLIC
+    ports:
+       - "8081:8081"
+    environment:
+      LICENSINGSERVICE_PORT: 8081
+    networks:
+      backend:
+        aliases:
+          - "licensingservice"
+    depends_on:
+          configserver:
+            condition: service_healthy
+          eurekaserver:
+            condition: service_healthy
+    
+networks:
+  backend:
+    driver: bridge
